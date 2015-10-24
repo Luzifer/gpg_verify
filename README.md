@@ -21,3 +21,13 @@ https://gpgverify.hub.luzifer.io/verify
   ?url=https://raw.githubusercontent.com/Luzifer/gpg_verify/master/example/cat-hunting.jpg
   &key=D34BE99E
 ```
+
+## Usage
+
+- Get the file you want to verify
+- Generate the signature:  
+```
+# gpg --output cat-hunting.jpg.asc --detach-sign cat-hunting.jpg
+```
+- Upload the two files into the same directory
+- Build the verification URL as shown above
