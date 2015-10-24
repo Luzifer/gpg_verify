@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 	"text/template"
+	"time"
 )
 
 type verificationStatus uint
@@ -48,6 +48,7 @@ func renderBadge(res http.ResponseWriter, status verificationStatus, filename st
 		res.Header().Set("X-Reason", reason)
 	}
 
+	res.Header().Set("Content-Type", "image/svg+xml")
 	badgeSrc, _ := Asset("assets/badge.svg")
 	tpl, err := template.New("badge").Parse(string(badgeSrc))
 	if err != nil {
