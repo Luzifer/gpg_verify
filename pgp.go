@@ -21,7 +21,23 @@ func verifyOnlineDocument(res http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tmpDir, err := ioutil.TempDir("", "keyring")
+	if err != nil {
+		http.Error(res, "Unable to create keyring", http.StatusInternalServerError)
+		return
+	}
+	keyringFile := path.Join(tmpDir, "keyring.gpg")
+
 	filename := path.Base(document.Path)
+
+	keyID := r.URL.Query().Get("key")
+	keyURL := r.URL.Query().Get("key-url")
+	if err := primeGPGTrustedStore(keyID, keyURL, keyringFile); err != nil {
+		if err := renderBadge(res, verificationStatusError, filename, time.Now(), err.Error(), ""); err != nil {
+			http.Error(res, "Unable to render: "+err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
 
 	doc, signature, err := downloadDocumentAndSignature(r.URL.Query().Get("url"))
 	if err != nil {
@@ -31,7 +47,7 @@ func verifyOnlineDocument(res http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, key, err := verifySignature(doc, signature)
+	result, key, err := verifySignature(doc, signature, keyringFile)
 	if err != nil {
 		if err := renderBadge(res, result, filename, time.Now(), err.Error(), ""); err != nil {
 			http.Error(res, "Unable to render: "+err.Error(), http.StatusInternalServerError)
@@ -39,12 +55,42 @@ func verifyOnlineDocument(res http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	os.RemoveAll(tmpDir)
+
 	if err := renderBadge(res, result, filename, time.Now(), "", key); err != nil {
 		http.Error(res, "Unable to render: "+err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func verifySignature(document, signature []byte) (verificationStatus, string, error) {
+func primeGPGTrustedStore(keyID, keyURL, keyringFile string) error {
+	if len(keyID) == 0 {
+		return fmt.Errorf("Paramter key was empty")
+	}
+
+	if len(keyURL) == 0 {
+		keyURL = "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x" + keyID
+	}
+
+	resp, err := http.Get(keyURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	cmd := exec.Command(cfg.GPGPath,
+		"--no-default-keyring",
+		"--batch",
+		"--keyring", keyringFile,
+		"--keyserver-options", "no-auto-key-retrieve",
+		"--import",
+	)
+	cmd.Stdin = resp.Body
+	cmd.Run()
+
+	return nil
+}
+
+func verifySignature(document, signature []byte, keyringFile string) (verificationStatus, string, error) {
 	tmpDir, err := ioutil.TempDir("", "pgp_verify")
 	if err != nil {
 		return verificationStatusError, "", err
@@ -63,7 +109,8 @@ func verifySignature(document, signature []byte) (verificationStatus, string, er
 	cmd := exec.Command(cfg.GPGPath,
 		"--no-default-keyring",
 		"--batch",
-		"--keyring", "/tmp/pubring.gpg",
+		"--keyring", keyringFile,
+		"--keyserver-options", "no-auto-key-retrieve",
 		"--verify", path.Join(tmpDir, "document.asc"),
 		path.Join(tmpDir, "document"),
 	)

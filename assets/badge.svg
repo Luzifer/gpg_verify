@@ -13,8 +13,8 @@
     <path fill="url(#b)" d="M0 0h200v85H0z" />
   </g>
   <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="12">
-    <text x="100" y="17" fill="#010101" fill-opacity=".3" style="font-weight:bold;">GPG Verification Result for</text>
-    <text x="100" y="16" style="font-weight:bold;">GPG Verification Result for</text>
+    <text x="100" y="17" fill="#010101" fill-opacity=".3" style="font-weight:bold;">File Verification Result for</text>
+    <text x="100" y="16" style="font-weight:bold;">File Verification Result for</text>
 
     <text x="100" y="36" fill="#010101" fill-opacity=".3">{{ .Filename }}</text>
     <text x="100" y="35">{{ .Filename }}</text>
@@ -22,7 +22,7 @@
     <text x="100" y="61" fill="#010101" fill-opacity=".3">{{ .Result }}</text>
     <text x="100" y="60">{{ .Result }}</text>
 
-    <text x="100" y="80" fill="#010101" fill-opacity=".3">checked on {{ .Date }}</text>
-    <text x="100" y="79">checked on {{ .Date }}</text>
+    <text x="100" y="80" fill="#010101" fill-opacity=".3">checked {{ .Date }}</text>
+    <text x="100" y="79">checked {{ .Date }}</text>
   </g>
 </svg>
