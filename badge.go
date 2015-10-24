@@ -5,8 +5,7 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/ipfs/go-ipfs/Godeps/_workspace/src/github.com/alecthomas/template"
+	"text/template"
 )
 
 type verificationStatus uint
